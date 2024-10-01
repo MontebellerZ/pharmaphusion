@@ -34,22 +34,81 @@ export type ITokenData = {
     tempoInatividade: number;
 };
 
-export interface IPedidoData {
+export type IPedidoData = {
     resultado: {
         id: number;
-        canalId: number;
-        pedidoId: number;
         numero: number;
-        dataAtualizacao: string;
         dataAprovacao: string;
         clienteNomeRazao: string;
-        atendenteNome: string;
         precoLiquido: number;
         valorSubsidio: number;
-        pedidoStatusId: number;
-        statusFinanceiroId: number;
-        statusAtual: number;
-        statusAtualDescricao: string;
     }[];
     sucesso: boolean;
-}
+};
+
+export type IPedidoDetailsRawData = {
+    resultado: {
+        numero: number;
+        clienteNomeRazao: string;
+        percentualDesconto: number;
+        valorDesconto: number;
+        percentualAcrescimo: number;
+        valorAcrescimo: number;
+        valorPago: number;
+        precoOriginal: number;
+        precoBruto: number;
+        precoLiquido: number;
+        taxaEntrega: number;
+        pedidoFormulas?:
+            | {
+                  pedidoNumero: number;
+                  pacienteNome: string;
+                  pedidoVeterinario: boolean;
+                  dataAprovacao: string;
+              }[]
+            | null;
+        valorSubsidio: number;
+    };
+    sucesso: boolean;
+};
+
+export type IPedidoDetailsData = {
+    resultado: {
+        numero: number;
+        clienteNomeRazao: string;
+        percentualDesconto: number;
+        valorDesconto: number;
+        percentualAcrescimo: number;
+        valorAcrescimo: number;
+        valorPago: number;
+        precoOriginal: number;
+        precoBruto: number;
+        precoLiquido: number;
+        taxaEntrega: number;
+        pacienteNome: string;
+        pedidoVeterinario: boolean;
+        dataAprovacao: string;
+        valorSubsidio: number;
+    };
+    sucesso: boolean;
+};
+
+export type IPedidoExcelData = {
+    DATA?: string;
+    PEDIDO: number;
+    NOME?: string;
+    "VALOR FINAL"?: number;
+    DESCONTO?: number | null;
+    "TOTAL DE ITENS"?: number | null;
+    COMPROVANTE?: string | null;
+    PAGAMENTO?: string | null;
+};
+
+export type IRequiredColumn = {
+    excelLetter: string;
+    excel: string;
+    get: (
+        pedidoDetails: IPedidoDetailsData["resultado"],
+        ...params: any
+    ) => number | string | boolean | Date;
+};
