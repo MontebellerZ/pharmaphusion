@@ -1,0 +1,19 @@
+{
+    "name": "pharmaphusion",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "author": "Filipe Montebeller Rocha",
+    "license": "MIT",
+    "scripts": {
+        "start": "ts-node index.ts"
+    },
+    "dependencies": {
+        "@types/node": "^22.7.4",
+        "axios": "^1.7.7",
+        "dotenv": "^16.4.5",
+        "puppeteer": "^23.4.1",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.6.2",
+        "xlsx": "^0.18.5"
+    }
+}
