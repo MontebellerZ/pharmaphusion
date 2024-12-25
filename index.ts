@@ -70,34 +70,44 @@ function getPedidoParams(pedidoNumero: string | number, tenandId: string) {
     };
 }
 
+function getCorrectTable(ws: exceljs.Worksheet, tableName: string) {
+    // return (ws.getTable(tableName) as unknown as { worksheet: any; table: exceljs.Table }).table;
+    return ws.getTable(tableName);
+}
+
 async function getPedidosExcelData() {
     const wb = new exceljs.Workbook();
     await wb.xlsx.readFile(process.env.EXCEL_PATH);
 
     const ws = wb.getWorksheet("Vendas");
 
+    // A lib exceljs tipou errado o retorno da função, abaixo o tipo é ajustado
+    const tbl = getCorrectTable(ws, "Tabela3");
+
+    console.log("ue", tbl.getColumn(1));
+
     const data: IPedidoExcelData[] = [];
 
-    const firstRow = ws.getRow(1);
-    const keys = firstRow.values;
+    // const firstRow = ws.getRow(1);
+    // const keys = firstRow.values;
 
-    if (!Array.isArray(keys)) throw new Error("Não é um array");
+    // if (!Array.isArray(keys)) throw new Error("Não é um array");
 
-    ws.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
+    // ws.eachRow((row, rowNumber) => {
+    //     if (rowNumber === 1) return;
 
-        const obj: IPedidoExcelData = { PEDIDO: 0 };
+    //     const obj: IPedidoExcelData = { PEDIDO: 0 };
 
-        for (let i = 1; i < keys.length; i++) {
-            const key = keys[i];
+    //     for (let i = 1; i < keys.length; i++) {
+    //         const key = keys[i];
 
-            if (typeof key !== "string") continue;
+    //         if (typeof key !== "string") continue;
 
-            obj[key] = row.values[i];
-        }
+    //         obj[key] = row.values[i];
+    //     }
 
-        data.push(obj);
-    });
+    //     data.push(obj);
+    // });
 
     return { wb, ws, data: data.slice(0, 20) };
 }
@@ -114,7 +124,7 @@ async function insertPedidosInfo(
 }
 
 async function writePedidosExcelData(wb: exceljs.Workbook) {
-    await wb.xlsx.writeFile(process.env.EXCEL_PATH);
+    await wb.xlsx.writeFile(process.env.EXCEL_PATH, { useStyles: true });
 }
 
 async function connectApi() {
@@ -132,73 +142,75 @@ async function connectApi() {
 }
 
 async function main() {
-    const { tokenData } = await connectApi();
+    // const { tokenData } = await connectApi();
 
     const { wb: excelWb, ws: excelWs, data: pedidos } = await getPedidosExcelData();
 
-    for (let i = 0; i < pedidos.length; i++) {
-        const ped = pedidos[i];
+    // for (let i = 0; i < pedidos.length; i++) {
+    //     const ped = pedidos[i];
 
-        if (!ped.PEDIDO) {
-            registerError(`Não existe o número do pedido na linha ${i + 2} do excel`);
-            continue;
-        }
+    //     if (!ped.PEDIDO) {
+    //         registerError(`Não existe o número do pedido na linha ${i + 2} do excel`);
+    //         continue;
+    //     }
 
-        if (!ped["VALOR FINAL"]) {
-            registerWarn(
-                `O pedido ${ped.PEDIDO} não possui valor original, será inserido o da Phusion`
-            );
-        }
+    //     if (!ped["VALOR FINAL"]) {
+    //         registerWarn(
+    //             `O pedido ${ped.PEDIDO} não possui valor original, será inserido o da Phusion`
+    //         );
+    //     }
 
-        if (REQUIRED_COLUMNS.every((col) => ped[col.excel] != undefined)) {
-            console.info(`Pedido ${ped.PEDIDO} já possui todos os dados corretamente`);
-            continue;
-        }
+    //     if (REQUIRED_COLUMNS.every((col) => ped[col.excel] != undefined)) {
+    //         console.info(`Pedido ${ped.PEDIDO} já possui todos os dados corretamente`);
+    //         continue;
+    //     }
 
-        const pedidoApi: IPedidoData = await dataAxios
-            .get("/vendas/api/pedido/v1", {
-                params: getPedidoParams(ped.PEDIDO, tokenData.tenantId),
-            })
-            .then((res) => res.data);
+    //     const pedidoApi: IPedidoData = await dataAxios
+    //         .get("/vendas/api/pedido/v1", {
+    //             params: getPedidoParams(ped.PEDIDO, tokenData.tenantId),
+    //         })
+    //         .then((res) => res.data);
 
-        if (!pedidoApi.sucesso || !pedidoApi.resultado.length) {
-            registerError(`O pedido ${ped.PEDIDO} não foi encontrado na Phusion`);
-            continue;
-        }
+    //     if (!pedidoApi.sucesso || !pedidoApi.resultado.length) {
+    //         registerError(`O pedido ${ped.PEDIDO} não foi encontrado na Phusion`);
+    //         continue;
+    //     }
 
-        const pedidoDetailsApi: IPedidoDetailsData = await dataAxios
-            .get(`/vendas/api/pedido/detalhes/${pedidoApi.resultado[0].id},${tokenData.tenantId}`)
-            .then((res) => {
-                const data: IPedidoDetailsRawData = res.data;
-                const result: IPedidoDetailsData = {
-                    ...data,
-                    resultado: {
-                        ...data.resultado,
-                        pacienteNome: data.resultado.pedidoFormulas?.at(0)?.pacienteNome,
-                        dataAprovacao: data.resultado.pedidoFormulas?.at(0)?.dataAprovacao,
-                        pedidoVeterinario: data.resultado.pedidoFormulas?.some(
-                            (p) => p.pedidoVeterinario
-                        ),
-                    },
-                };
-                return result;
-            });
+    //     const pedidoDetailsApi: IPedidoDetailsData = await dataAxios
+    //         .get(`/vendas/api/pedido/detalhes/${pedidoApi.resultado[0].id},${tokenData.tenantId}`)
+    //         .then((res) => {
+    //             const data: IPedidoDetailsRawData = res.data;
+    //             const result: IPedidoDetailsData = {
+    //                 ...data,
+    //                 resultado: {
+    //                     ...data.resultado,
+    //                     pacienteNome: data.resultado.pedidoFormulas?.at(0)?.pacienteNome,
+    //                     dataAprovacao: data.resultado.pedidoFormulas?.at(0)?.dataAprovacao,
+    //                     pedidoVeterinario: data.resultado.pedidoFormulas?.some(
+    //                         (p) => p.pedidoVeterinario
+    //                     ),
+    //                 },
+    //             };
+    //             return result;
+    //         });
 
-        if (!pedidoDetailsApi.sucesso || !pedidoDetailsApi.resultado) {
-            registerError(`Os detalhes do pedido ${ped.PEDIDO} não foram encontrados na Phusion`);
-            continue;
-        }
+    //     if (!pedidoDetailsApi.sucesso || !pedidoDetailsApi.resultado) {
+    //         registerError(`Os detalhes do pedido ${ped.PEDIDO} não foram encontrados na Phusion`);
+    //         continue;
+    //     }
 
-        REQUIRED_COLUMNS.forEach((col) => {
-            if (ped[col.excel] != undefined) return;
+    //     REQUIRED_COLUMNS.forEach((col) => {
+    //         if (ped[col.excel] != undefined) return;
 
-            insertPedidosInfo(pedidos, i, col, pedidoDetailsApi.resultado, excelWs);
-        });
+    //         insertPedidosInfo(pedidos, i, col, pedidoDetailsApi.resultado, excelWs);
+    //     });
 
-        console.info(`Pedido ${ped.PEDIDO} atualizado com sucesso`);
-    }
+    //     console.info(`Pedido ${ped.PEDIDO} atualizado com sucesso`);
+    // }
 
-    await writePedidosExcelData(excelWb);
+    // excelWs.getCell(`H2`).value = "teste";
+
+    // await writePedidosExcelData(excelWb);
 }
 
 main()
